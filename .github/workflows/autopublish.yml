@@ -7,7 +7,7 @@ on:
 
 jobs:
   label:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' }}
     runs-on: ubuntu-22.04
     permissions:
       pull-requests: write
@@ -17,20 +17,22 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prs = context.payload.workflow_run.pull_requests;
-            if (!prs || prs.length === 0) {
-              core.info('No pull request found for workflow run.');
+            const headBranch = context.payload.workflow_run.head_branch;
+            if (!headBranch || !headBranch.startsWith('chroma-')) {
+              core.info('Head branch is not from automated Chroma release.');
               return;
             }
-            const pr = prs[0];
-            if (pr.base.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
-              core.info('PR does not target this repo.');
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${headBranch}`,
+            });
+            if (!prs.data || prs.data.length === 0) {
+              core.info(`No open PR found for head branch ${headBranch}.`);
               return;
             }
-            if (!pr.head || !pr.head.ref.startsWith('chroma-')) {
-              core.info('PR is not from automated Chroma release.');
-              return;
-            }
+            const pr = prs.data[0];
             const labels = await github.rest.issues.listLabelsOnIssue({
               owner: context.repo.owner,
               repo: context.repo.repo,
