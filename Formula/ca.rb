@@ -14,7 +14,9 @@ class Ca < Formula
   end
 
   def install
-    system "swift", "build", "-c", "release", "--disable-sandbox", "--product", "ca"
+    args = ["-c", "release", "--disable-sandbox", "--product", "ca"]
+    args << "--static-swift-stdlib" if OS.linux?
+    system "swift", "build", *args
     bin.install ".build/release/ca"
   end
 
