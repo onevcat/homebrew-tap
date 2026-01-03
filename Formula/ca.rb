@@ -7,6 +7,7 @@ class Ca < Formula
 
   on_macos do
     depends_on macos: :sequoia
+    depends_on xcode: ["26.0", :build] if Hardware::CPU.intel?
   end
 
   on_linux do
