@@ -14,7 +14,7 @@ class Ca < Formula
   end
 
   def install
-    system "swift", "build", "-c", "release", "--disable-sandbox"
+    system "swift", "build", "-c", "release", "--disable-sandbox", "--product", "ca"
     bin.install ".build/release/ca"
   end
 
