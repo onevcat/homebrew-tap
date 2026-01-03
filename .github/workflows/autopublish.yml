@@ -1,0 +1,48 @@
+name: auto pr-pull label
+
+on:
+  workflow_run:
+    workflows: ["brew test-bot"]
+    types: [completed]
+
+jobs:
+  label:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Add pr-pull label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = context.payload.workflow_run.pull_requests;
+            if (!prs || prs.length === 0) {
+              core.info('No pull request found for workflow run.');
+              return;
+            }
+            const pr = prs[0];
+            if (pr.base.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              core.info('PR does not target this repo.');
+              return;
+            }
+            if (!pr.head || !pr.head.ref.startsWith('chroma-')) {
+              core.info('PR is not from automated Chroma release.');
+              return;
+            }
+            const labels = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            if (labels.data.some(label => label.name === 'pr-pull')) {
+              core.info('pr-pull label already present.');
+              return;
+            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['pr-pull'],
+            });
