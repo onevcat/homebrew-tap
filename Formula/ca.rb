@@ -6,8 +6,8 @@ class Ca < Formula
   license "MIT"
 
   on_macos do
-    depends_on macos: :sequoia
     depends_on xcode: ["26.0", :build] if Hardware::CPU.intel?
+    depends_on macos: :sequoia
   end
 
   on_linux do
