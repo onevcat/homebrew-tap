@@ -16,7 +16,7 @@ jobs:
       (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
-      startsWith(github.event.workflow_run.head_branch, 'chroma-'))
+      (startsWith(github.event.workflow_run.head_branch, 'chroma-') || startsWith(github.event.workflow_run.head_branch, 'xin-')))
     runs-on: ubuntu-22.04
     permissions:
       actions: read
