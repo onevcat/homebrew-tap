@@ -6,9 +6,9 @@ class Xin < Formula
   license "MIT"
 
   bottle do
-    root_url "https://github.com/onevcat/homebrew-tap/releases/download/xin-0.1.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "1f64c86fbd4e66aee7835e105a7f9bd0b63a532f0f04e3ff7558bf309f3585fb"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "d8c862a7411a1ed57492086fcb9bcd66041fccd6a6e65b37dd7a7d8b73a5e8a8"
+    root_url "https://github.com/onevcat/homebrew-tap/releases/download/xin-0.1.1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "ad8d8f98b390f64b542d0f4ae8ee34e6fcde357a64d3d076b68e41fd1d4068df"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "beaacc07fdcc008a9b738c51065e8ce46132b4d14aebbd625fa75fa8f744ba4c"
   end
 
   depends_on "rust" => :build
