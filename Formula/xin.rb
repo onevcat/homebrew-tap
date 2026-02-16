@@ -1,8 +1,8 @@
 class Xin < Formula
   desc "Agent-first JMAP CLI (Fastmail-first)"
   homepage "https://github.com/onevcat/xin"
-  url "https://github.com/onevcat/xin/archive/refs/tags/0.1.1.tar.gz"
-  sha256 "6460a94871932520697de0e4ea0457374b58f98b4ab8509d9a088eeba3ccd3ca"
+  url "https://github.com/onevcat/xin/archive/refs/tags/v0.1.2.tar.gz"
+  sha256 "01ea59812571862d772208255402378565a32a434d78acd1c8b91b8d1f643740"
   license "MIT"
 
   bottle do
