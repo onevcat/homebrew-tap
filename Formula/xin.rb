@@ -5,7 +5,6 @@ class Xin < Formula
   sha256 "11ff3c7b380910bbce042a21d3d51f5e62c8c9fb24ffe840757c6e51c4f10319"
   license "MIT"
 
-
   depends_on "rust" => :build
 
   def install
