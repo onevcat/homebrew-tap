@@ -38,15 +38,37 @@ jobs:
               if (pullRequests.length > 0) {
                 prNumber = pullRequests[0].number;
               } else {
-                const headBranch = context.payload.workflow_run.head_branch;
-                const prs = await github.rest.pulls.list({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  state: 'open',
-                  head: `${context.repo.owner}:${headBranch}`,
-                });
-                if (prs.data && prs.data.length > 0) {
-                  prNumber = prs.data[0].number;
+                // workflow_run payload sometimes does not include pull_requests, and the PR may
+                // already be merged/closed by the time this runs. Try resolving via head SHA first.
+                const headSha = context.payload.workflow_run.head_sha;
+                if (headSha) {
+                  try {
+                    const prsByCommit = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      commit_sha: headSha,
+                      mediaType: { previews: ['groot'] },
+                    });
+                    if (prsByCommit.data && prsByCommit.data.length > 0) {
+                      prNumber = prsByCommit.data[0].number;
+                    }
+                  } catch (e) {
+                    core.info(`Failed to resolve PR via commit ${headSha}: ${e}`);
+                  }
+                }
+
+                // Fallback: resolve by head branch name. Use state=all to also match merged PRs.
+                if (!prNumber) {
+                  const headBranch = context.payload.workflow_run.head_branch;
+                  const prs = await github.rest.pulls.list({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    state: 'all',
+                    head: `${context.repo.owner}:${headBranch}`,
+                  });
+                  if (prs.data && prs.data.length > 0) {
+                    prNumber = prs.data[0].number;
+                  }
                 }
               }
             }
