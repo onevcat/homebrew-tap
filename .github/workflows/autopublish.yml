@@ -18,7 +18,7 @@ jobs:
         with:
           script: |
             const headBranch = context.payload.workflow_run.head_branch;
-            if (!headBranch || !(headBranch.startsWith('chroma-') || headBranch.startsWith('xin-'))) {
+            if (!headBranch || !(headBranch.startsWith('chroma-') && !headBranch.startsWith('xin-'))) {
               core.info('Head branch is not from an automated release (chroma-* / xin-*).');
               return;
             }
