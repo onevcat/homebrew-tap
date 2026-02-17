@@ -4,6 +4,7 @@ class Xin < Formula
   url "https://github.com/onevcat/xin/archive/refs/tags/v0.1.3.tar.gz"
   sha256 "11ff3c7b380910bbce042a21d3d51f5e62c8c9fb24ffe840757c6e51c4f10319"
   license "MIT"
+  revision 1
 
   depends_on "rust" => :build
 
