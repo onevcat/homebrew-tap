@@ -4,19 +4,19 @@ on:
   pull_request_target:
     types:
       - labeled
-  workflow_run:
-    workflows: ["brew test-bot"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull request number to run brew pr-pull for"
+        required: true
+        type: string
 
 jobs:
   pr-pull:
     if: >
       (github.event_name == 'pull_request_target' &&
       contains(github.event.pull_request.labels.*.name, 'pr-pull')) ||
-      (github.event_name == 'workflow_run' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
-      (startsWith(github.event.workflow_run.head_branch, 'chroma-') || startsWith(github.event.workflow_run.head_branch, 'xin-')))
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-22.04
     permissions:
       actions: read
@@ -33,47 +33,12 @@ jobs:
             let prNumber;
             if (context.eventName === 'pull_request_target') {
               prNumber = context.payload.pull_request.number;
-            } else if (context.eventName === 'workflow_run') {
-              const pullRequests = context.payload.workflow_run.pull_requests || [];
-              if (pullRequests.length > 0) {
-                prNumber = pullRequests[0].number;
-              } else {
-                // workflow_run payload sometimes does not include pull_requests, and the PR may
-                // already be merged/closed by the time this runs. Try resolving via head SHA first.
-                const headSha = context.payload.workflow_run.head_sha;
-                if (headSha) {
-                  try {
-                    const prsByCommit = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      commit_sha: headSha,
-                      mediaType: { previews: ['groot'] },
-                    });
-                    if (prsByCommit.data && prsByCommit.data.length > 0) {
-                      prNumber = prsByCommit.data[0].number;
-                    }
-                  } catch (e) {
-                    core.info(`Failed to resolve PR via commit ${headSha}: ${e}`);
-                  }
-                }
-
-                // Fallback: resolve by head branch name. Use state=all to also match merged PRs.
-                if (!prNumber) {
-                  const headBranch = context.payload.workflow_run.head_branch;
-                  const prs = await github.rest.pulls.list({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    state: 'all',
-                    head: `${context.repo.owner}:${headBranch}`,
-                  });
-                  if (prs.data && prs.data.length > 0) {
-                    prNumber = prs.data[0].number;
-                  }
-                }
-              }
+            } else if (context.eventName === 'workflow_dispatch') {
+              prNumber = context.payload.inputs.pr_number;
             }
+
             if (!prNumber) {
-              core.setFailed('Unable to resolve pull request number.');
+              core.setFailed('Missing pull request number.');
               return;
             }
             const pr = await github.rest.pulls.get({
