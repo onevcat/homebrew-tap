@@ -5,6 +5,7 @@ class Xin < Formula
   sha256 "11ff3c7b380910bbce042a21d3d51f5e62c8c9fb24ffe840757c6e51c4f10319"
   license "MIT"
 
+  # Trigger bottle rebuild for v0.1.3 (previous pr-pull failed after PR merge)
   bottle do
     root_url "https://github.com/onevcat/homebrew-tap/releases/download/xin-0.1.2"
     sha256 cellar: :any_skip_relocation, arm64_tahoe:  "c0251465afa39029c49836e7f22ee522b2ca8ae962603e011742e59da63a9978"
