@@ -18,21 +18,47 @@ jobs:
         with:
           script: |
             const headBranch = context.payload.workflow_run.head_branch;
-            if (!headBranch || !(headBranch.startsWith('chroma-') && !headBranch.startsWith('xin-'))) {
+            const headSha = context.payload.workflow_run.head_sha;
+
+            // We only auto-publish for automated release branches.
+            if (!headBranch || !(headBranch.startsWith('chroma-') || headBranch.startsWith('xin-'))) {
               core.info('Head branch is not from an automated release (chroma-* / xin-*).');
               return;
             }
-            const prs = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:${headBranch}`,
-            });
-            if (!prs.data || prs.data.length === 0) {
+
+            // Resolve the PR. Prefer open PR by head branch; fallback to commit association.
+            let pr;
+            {
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${headBranch}`,
+              });
+              if (prs.data && prs.data.length > 0) {
+                pr = prs.data[0];
+              }
+            }
+
+            if (!pr && headSha) {
+              try {
+                const prsByCommit = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: headSha,
+                  mediaType: { previews: ['groot'] },
+                });
+                const open = (prsByCommit.data || []).find(p => p.state === 'open');
+                if (open) pr = open;
+              } catch (e) {
+                core.info(`Failed to resolve PR via commit ${headSha}: ${e}`);
+              }
+            }
+
+            if (!pr) {
               core.info(`No open PR found for head branch ${headBranch}.`);
               return;
             }
-            const pr = prs.data[0];
             const labels = await github.rest.issues.listLabelsOnIssue({
               owner: context.repo.owner,
               repo: context.repo.repo,
