@@ -1,8 +1,8 @@
 class Ca < Formula
   desc "Chroma-powered cat replacement with syntax highlighting"
   homepage "https://github.com/onevcat/Chroma"
-  url "https://github.com/onevcat/Chroma/archive/refs/tags/0.2.0.tar.gz"
-  sha256 "1a38c1c7d9b29960ecc1701e773a03c09dfcf466768c8bbef018d988ed9f462c"
+  url "https://github.com/onevcat/Chroma/archive/refs/tags/0.3.0.tar.gz"
+  sha256 "28f7517fc725fb73afaec811e4fb7d4ad118d0b9f350e11f1fe0dfcaa424de0f"
   license "MIT"
 
   bottle do
