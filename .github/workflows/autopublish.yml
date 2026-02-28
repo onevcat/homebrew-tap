@@ -1,4 +1,4 @@
-name: auto pr-pull label
+name: auto pr-pull
 
 on:
   workflow_run:
@@ -6,14 +6,19 @@ on:
     types: [completed]
 
 jobs:
-  label:
+  pr-pull:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' }}
     runs-on: ubuntu-22.04
     permissions:
+      actions: read
+      checks: read
+      contents: write
+      issues: read
       pull-requests: write
-      contents: read
+
     steps:
-      - name: Add pr-pull label
+      - name: Resolve PR
+        id: resolve-pr
         uses: actions/github-script@v7
         with:
           script: |
@@ -59,18 +64,38 @@ jobs:
               core.info(`No open PR found for head branch ${headBranch}.`);
               return;
             }
-            const labels = await github.rest.issues.listLabelsOnIssue({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-            });
-            if (labels.data.some(label => label.name === 'pr-pull')) {
-              core.info('pr-pull label already present.');
-              return;
-            }
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              labels: ['pr-pull'],
-            });
+
+            core.setOutput('pr_number', pr.number.toString());
+            core.setOutput('head_ref', pr.head.ref);
+            core.setOutput('head_repo_fork', pr.head.repo && pr.head.repo.fork ? 'true' : 'false');
+
+      - name: "Guard: only run for non-fork PRs"
+        if: steps.resolve-pr.outputs.head_repo_fork == 'true' || steps.resolve-pr.outputs.pr_number == ''
+        run: |
+          echo "Skip: fork PR or PR not resolved."
+          exit 0
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up git
+        uses: Homebrew/actions/git-user-config@main
+
+      - name: Pull bottles
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST: ${{ steps.resolve-pr.outputs.pr_number }}
+        run: brew pr-pull --debug --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
+
+      - name: Push commits
+        uses: Homebrew/actions/git-try-push@main
+        with:
+          branch: main
+
+      - name: Delete branch
+        if: steps.resolve-pr.outputs.head_repo_fork != 'true' && steps.resolve-pr.outputs.head_ref != ''
+        env:
+          BRANCH: ${{ steps.resolve-pr.outputs.head_ref }}
+        run: git push --delete origin "$BRANCH"
