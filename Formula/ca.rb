@@ -6,10 +6,10 @@ class Ca < Formula
   license "MIT"
 
   bottle do
-    root_url "https://github.com/onevcat/homebrew-tap/releases/download/ca-0.3.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "b805bf83d5b6d858c613d3d6255e397ed8d193ad6d100901cf517bc273ebfcdf"
-    sha256 cellar: :any_skip_relocation, sequoia:      "644e6f3c9164330f9200294e30a2367817bd7fa5a471a91d44223126b79864a9"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "b091863cb1a4ead02c564daf332242b78e455bf31d61506c1f80dd8193bedc73"
+    root_url "https://github.com/onevcat/homebrew-tap/releases/download/ca-0.3.1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "2e521159e9bedfcd0d60ca6234ab1b5c792c037aef1ec85657632da4f04e2e6b"
+    sha256 cellar: :any_skip_relocation, sequoia:      "c76056fc5fa9c31abf788d6d5fa55b2cba5755d8f65ebec03dc4cfb17bdae1d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "289c669dcec3332d7d2dae38c25997a4625c27514243c5d51fdc833fc8ff43b1"
   end
 
   on_macos do
