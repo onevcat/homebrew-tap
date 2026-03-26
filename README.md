@@ -8,6 +8,12 @@ Homebrew tap for onevcat tools.
 brew install onevcat/tap/ca
 ```
 
+## Install Prowl
+
+```bash
+brew install --cask onevcat/tap/prowl
+```
+
 ## Bottles
 
 Bottles are built and published automatically after a Chroma release for supported platforms.

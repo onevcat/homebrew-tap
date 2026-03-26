@@ -18,6 +18,8 @@ jobs:
       contents: read
       pull-requests: read
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
@@ -42,6 +44,15 @@ jobs:
       - run: brew test-bot --only-tap-syntax
       - run: brew test-bot --only-formulae
         if: github.event_name == 'pull_request'
+
+      - name: Cask sanity check (Prowl)
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'prowl-') && startsWith(matrix.os, 'macos-')
+        run: |
+          brew untap onevcat/tap || true
+          brew tap onevcat/tap "$GITHUB_WORKSPACE"
+          brew audit --strict --cask onevcat/tap/prowl
+          brew install --cask --verbose --force onevcat/tap/prowl
+          brew uninstall --cask --force onevcat/tap/prowl
 
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
