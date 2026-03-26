@@ -52,12 +52,9 @@ jobs:
       - name: Cask sanity check (Prowl)
         if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'prowl-') && startsWith(matrix.os, 'macos-')
         run: |
-          brew untap onevcat/tap || true
-          brew tap onevcat/tap "$GITHUB_WORKSPACE"
-          brew audit --strict --cask onevcat/tap/prowl
-          brew install --cask --verbose --force onevcat/tap/prowl
-          brew uninstall --cask --force onevcat/tap/prowl
-          brew untap onevcat/tap || true
+          brew audit --strict --cask Casks/prowl.rb
+          brew install --cask --verbose --force Casks/prowl.rb
+          brew uninstall --cask --force prowl
 
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
