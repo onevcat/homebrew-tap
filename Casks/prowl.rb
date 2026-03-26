@@ -4,7 +4,7 @@ cask "prowl" do
 
   url "https://github.com/onevcat/Prowl/releases/download/v#{version}/Prowl.dmg"
   name "Prowl"
-  desc "Native macOS coding agent orchestrator"
+  desc "Coding agent orchestrator"
   homepage "https://github.com/onevcat/Prowl"
 
   auto_updates true
