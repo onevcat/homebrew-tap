@@ -1,4 +1,4 @@
-name: auto pr-pull
+name: auto publish
 
 on:
   workflow_run:
@@ -6,7 +6,7 @@ on:
     types: [completed]
 
 jobs:
-  pr-pull:
+  publish:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' }}
     runs-on: ubuntu-22.04
     permissions:
@@ -25,13 +25,17 @@ jobs:
             const headBranch = context.payload.workflow_run.head_branch;
             const headSha = context.payload.workflow_run.head_sha;
 
-            // We only auto-publish for automated release branches.
-            if (!headBranch || !(headBranch.startsWith('chroma-') || headBranch.startsWith('xin-'))) {
-              core.info('Head branch is not from an automated release (chroma-* / xin-*).');
+            const isManagedBranch = headBranch && (
+              headBranch.startsWith('chroma-') ||
+              headBranch.startsWith('xin-') ||
+              headBranch.startsWith('prowl-')
+            );
+
+            if (!isManagedBranch) {
+              core.info('Head branch is not from an automated release (chroma-* / xin-* / prowl-*).');
               return;
             }
 
-            // Resolve the PR. Prefer open PR by head branch; fallback to commit association.
             let pr;
             {
               const prs = await github.rest.pulls.list({
@@ -65,37 +69,85 @@ jobs:
               return;
             }
 
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              },
+            );
+            const changedPaths = files.map(file => file.filename);
+            const caskOnly = changedPaths.length > 0 && changedPaths.every(path => path === 'Casks/prowl.rb');
+            const strategy = headBranch.startsWith('prowl-') ? (caskOnly ? 'direct-merge' : 'skip') : 'pr-pull';
+
             core.setOutput('pr_number', pr.number.toString());
             core.setOutput('head_ref', pr.head.ref);
             core.setOutput('head_repo_fork', pr.head.repo && pr.head.repo.fork ? 'true' : 'false');
+            core.setOutput('strategy', strategy);
 
-      - name: "Guard: only run for non-fork PRs"
-        if: steps.resolve-pr.outputs.head_repo_fork == 'true' || steps.resolve-pr.outputs.pr_number == ''
+            core.info(`Resolved PR #${pr.number} from ${headBranch} with strategy: ${strategy}`);
+            core.info(`Changed files: ${changedPaths.join(', ') || '<none>'}`);
+
+      - name: Guard
+        if: steps.resolve-pr.outputs.pr_number == '' || steps.resolve-pr.outputs.head_repo_fork == 'true' || steps.resolve-pr.outputs.strategy == 'skip'
         run: |
-          echo "Skip: fork PR or PR not resolved."
+          echo "Skip: unresolved PR, fork PR, or unsupported file change pattern."
           exit 0
 
       - name: Set up Homebrew
+        if: steps.resolve-pr.outputs.strategy == 'pr-pull'
         uses: Homebrew/actions/setup-homebrew@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up git
+        if: steps.resolve-pr.outputs.strategy == 'pr-pull'
         uses: Homebrew/actions/git-user-config@main
 
       - name: Pull bottles
+        if: steps.resolve-pr.outputs.strategy == 'pr-pull'
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PULL_REQUEST: ${{ steps.resolve-pr.outputs.pr_number }}
         run: brew pr-pull --debug --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
 
       - name: Push commits
+        if: steps.resolve-pr.outputs.strategy == 'pr-pull'
         uses: Homebrew/actions/git-try-push@main
         with:
           branch: main
 
+      - name: Merge cask PR
+        if: steps.resolve-pr.outputs.strategy == 'direct-merge'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = Number('${{ steps.resolve-pr.outputs.pr_number }}');
+            const headRef = '${{ steps.resolve-pr.outputs.head_ref }}';
+
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'merge',
+            });
+
+            if (headRef) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${headRef}`,
+                });
+              } catch (error) {
+                core.info(`Failed to delete branch ${headRef}: ${error}`);
+              }
+            }
+
       - name: Delete branch
-        if: steps.resolve-pr.outputs.head_repo_fork != 'true' && steps.resolve-pr.outputs.head_ref != ''
+        if: steps.resolve-pr.outputs.strategy == 'pr-pull' && steps.resolve-pr.outputs.head_ref != ''
         env:
           BRANCH: ${{ steps.resolve-pr.outputs.head_ref }}
         run: git push --delete origin "$BRANCH"

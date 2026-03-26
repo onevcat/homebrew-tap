@@ -10,7 +10,11 @@ jobs:
   test-bot:
     strategy:
       matrix:
-        os: [ ubuntu-22.04, macos-15-intel, macos-26 ]
+        os: >-
+          ${{ github.event_name == 'pull_request' &&
+              startsWith(github.head_ref, 'prowl-') &&
+              fromJson('["macos-26"]')
+              || fromJson('["ubuntu-22.04", "macos-15-intel", "macos-26"]') }}
     runs-on: ${{ matrix.os }}
     permissions:
       actions: read
@@ -18,6 +22,8 @@ jobs:
       contents: read
       pull-requests: read
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
@@ -41,7 +47,14 @@ jobs:
       - run: brew test-bot --only-setup
       - run: brew test-bot --only-tap-syntax
       - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'prowl-')
+
+      - name: Cask sanity check (Prowl)
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'prowl-') && startsWith(matrix.os, 'macos-')
+        run: |
+          brew audit --strict --cask prowl
+          brew install --cask --verbose --force prowl
+          brew uninstall --cask --force prowl
 
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
