@@ -8,6 +8,12 @@ Homebrew tap for onevcat tools.
 brew install onevcat/tap/ca
 ```
 
+## Install tang
+
+```bash
+brew install onevcat/tap/tang
+```
+
 ## Install Prowl
 
 ```bash
