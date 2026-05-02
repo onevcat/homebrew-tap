@@ -7,7 +7,7 @@ class Tang < Formula
   license "MIT"
 
   depends_on arch: :arm64
-  depends_on macos: :big_sur
+  depends_on :macos
 
   def install
     bin.install "tang"
