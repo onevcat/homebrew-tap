@@ -8,6 +8,7 @@ cask "prowl" do
   homepage "https://github.com/onevcat/Prowl"
 
   auto_updates true
+  depends_on :macos
 
   app "Prowl.app"
 

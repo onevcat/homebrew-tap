@@ -1,9 +1,9 @@
 class Tang < Formula
   desc "Command-line client for Tangled"
   homepage "https://tangled.org/onev.cat/tang"
-  url "https://github.com/onevcat/homebrew-tap/releases/download/tang-0.0.1/tang-0.0.1-darwin-arm64.tar.gz"
-  version "0.0.1"
-  sha256 "d1960791d4d7a0296eea32cef3bfb62b06f59f0cfaf84ab89dcf31402687af77"
+  url "https://github.com/onevcat/homebrew-tap/releases/download/tang-0.0.2/tang-0.0.2-darwin-arm64.tar.gz"
+  version "0.0.2"
+  sha256 "325b18dc1d098b1adc6b4a2223c152a018f0b5d924c10e94dc4b4d30b8513f6e"
   license "MIT"
 
   depends_on arch: :arm64
