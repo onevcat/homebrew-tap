@@ -9,6 +9,8 @@ cask "prowl" do
 
   auto_updates true
 
+  depends_on :macos
+
   app "Prowl.app"
 
   zap trash: [
