@@ -8,6 +8,10 @@ on:
 
 jobs:
   test-bot:
+    env:
+      # Allow our own third-party tap so `brew doctor` does not fail the setup step
+      # on Homebrew's new untrusted-tap check (Homebrew 5.1.14+).
+      HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
     strategy:
       matrix:
         os: >-
