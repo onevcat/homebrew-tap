@@ -8,17 +8,13 @@ on:
 
 jobs:
   test-bot:
-    env:
-      # Allow our own third-party tap so `brew doctor` does not fail the setup step
-      # on Homebrew's new untrusted-tap check (Homebrew 5.1.14+).
-      HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
     strategy:
       matrix:
         os: >-
           ${{ github.event_name == 'pull_request' &&
               startsWith(github.head_ref, 'prowl-') &&
               fromJson('["macos-26"]')
-              || fromJson('["ubuntu-22.04", "macos-15-intel", "macos-26"]') }}
+              || fromJson('["ubuntu-24.04", "macos-15-intel", "macos-26"]') }}
     runs-on: ${{ matrix.os }}
     permissions:
       actions: read
