@@ -14,7 +14,7 @@ jobs:
           ${{ github.event_name == 'pull_request' &&
               startsWith(github.head_ref, 'prowl-') &&
               fromJson('["macos-26"]')
-              || fromJson('["ubuntu-22.04", "macos-15-intel", "macos-26"]') }}
+              || fromJson('["ubuntu-24.04", "macos-15-intel", "macos-26"]') }}
     runs-on: ${{ matrix.os }}
     permissions:
       actions: read
