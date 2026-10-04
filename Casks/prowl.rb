@@ -1,6 +1,6 @@
 cask "prowl" do
-  version "2026.9.29"
-  sha256 "c0ad24f313b18e9eefe90edb1c9a0075ce60ed19bdcaf689579aad3b92fda501"
+  version "2026.10.4"
+  sha256 "4ab713d633f648f19bd548e02f8135576ae9b6075f80c14024210f45e3779ec1"
 
   url "https://github.com/onevcat/Prowl/releases/download/v#{version}/Prowl.dmg"
   name "Prowl"
